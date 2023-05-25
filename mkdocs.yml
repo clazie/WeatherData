@@ -1,0 +1,8 @@
+site_name: WU2InfluxDB
+repo_url: https://github.com/cszielke
+site_author: Claus Zielke
+nav:
+    - Home: index.md
+    - Setup: setup.md
+    - Todo: todo.md
+theme: material

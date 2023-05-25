@@ -1,0 +1,6 @@
+# http://flake8.pycqa.org/en/latest/user/configuration.html
+[flake8]
+exclude = env 
+max-line-length = 80
+# http://flake8.pycqa.org/en/latest/user/error-codes.html
+ignore = E501 E111 E114

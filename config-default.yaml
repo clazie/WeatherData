@@ -1,0 +1,40 @@
+base:
+  version: 1.0.0
+  # possible service: ecowitt, weatherunderground, httpjson
+  # only one is allowed
+  service_to_use: ecowitt
+  # possible output: influxdb, mqtt, log
+  # multiple outputs are allowed
+  output_to_use:
+    # - influxdb
+    - mqtt
+    - log
+
+logger:
+  filename: weather2influxdb.log
+  backupcount: 3
+influxdb:
+  host: 192.168.15.107
+  port: 8086
+  user: admin
+  password: adminpassword
+  database: WeatherData
+mqtt:
+  host: 192.168.150.107
+  port: 1883
+  id: weatherdata_587612534
+  user: username
+  password: password
+  keepalive: 120
+  basetopic: 'weather/cz001/'
+ecowitt:
+  url: https://api.ecowitt.net/api/v3/device/real_time?application_key={}&api_key={}&mac={}&call_back=all
+  appkey: FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+  apikey: 5f3f78bf-25f7-4f03-9df4-6f7688268ef4
+  mac: 98:CD:AC:32:3D:3D
+weatherunderground:
+  url: https://api.weather.com/v2/pws/observations/current?stationId={stationid}&format=json&units=e&apiKey={apikey}
+  apikey: 72f2fdfb972f4457f2fdfb972f1457cf
+  stationid: IBIEBF55
+httpjson:
+  url: http://webcam.mfv-biebertal.de/mfv/Wetter1/json.php

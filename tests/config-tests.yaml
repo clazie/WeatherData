@@ -1,0 +1,76 @@
+# Make a copy of this file and rename it to "config.yaml". Adust topics to your needs.
+base:
+  devicename: NODENAME
+  gateway: GATEWAY
+modbus:
+  ip: "host.docker.internal"
+  port: 502
+  timeout: 3
+  pollinterval: 0.2
+broker:
+  ip: BROKER
+  port: 1234
+  user: USERNAME
+  password: PASSWORD
+  clientid: CLIENTID
+  prefix: PREFIX
+  version: PROTOKOLLVERSION
+# [ {"name": "di", "datatype": "int16", "address": "..."}, "default": 2, "interval": 2, "mode": "sampling" }, ....]
+# address: "coil.0.mb.r.0.8"  # [coil|input|inreg|holdreg].<slave_id>.[mb|varname].[r|w|rw].<adress>.<length>
+variables:
+      - 
+        name: "di"
+        datatype: "bool"
+        address: "coil.0.mb.r.0.8"
+        default: None
+        interval: 2
+        mode: "sampling"
+      -
+        name: "do"
+        datatype: "bool"
+        address: "coil.0.mb.rw.16.8"
+        default: None
+        interval: 2
+        mode: "sampling"
+      -
+        name: "taste1"
+        datatype: "bool"
+        address: "var.0.di.r.0.1"
+        default: 0
+        interval: 2
+        mode: "sampling"
+      -
+        name: "taste2"
+        datatype: "bool"
+        address: "var.0.di.r.1.1"
+        default: 0
+        interval: 2
+        mode: "sampling"
+      -
+        name: "rel1"
+        datatype: "bool"
+        address: "var.0.do.rw.0.1"
+        default: 0
+        interval: 2
+        mode: "sampling"
+      -
+        name: "rel2"
+        datatype: "bool"
+        address: "var.0.do.rw.1.1"
+        default: 0
+        interval: 2
+        mode: "sampling"
+      -
+        name: "rel3"
+        datatype: "bool"
+        address: "var.0.do.rw.2.1"
+        default: 0
+        interval: 2
+        mode: "sampling"
+      -
+        name: "rel4"
+        datatype: "bool"
+        address: "var.0.do.rw.3.1"
+        default: 0
+        interval: 2
+        mode: "sampling"

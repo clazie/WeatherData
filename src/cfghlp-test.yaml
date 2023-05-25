@@ -1,0 +1,23 @@
+# Comment
+category:
+  # Comment
+  topic: Success. TopicFound
+  commenttest1: ' // # should be part of the string, not a comment'
+  commenttest2: 'This is a string. Comment should be removed '  # Comment
+logging:
+  # All parameter needed for file logging. Parameter "logfile" can be overwitten with environment var "LOGPATH" and "LOGFILE".
+  level: debug  # could be critical, error, warning, info or debug
+  logfile: ./cfghlp-test.log
+  backupcount: 3  # // how much rotated files to keep
+mqtt:
+  client_id: kp1sim  # must be unique
+  hostname: 172.25.0.181  # isn't "localhost" a better choice?
+  port: 1883  # default port for MQTT
+  password: password  # /password for MQTT authentification
+  username: admin # username for MQTT authentification
+uns:
+  devicename: gateway1
+  devicenodename: s7comm_sim
+  nodetype: devicenode
+  prefix: kp  # should be always "kp"
+  protokollversion: v1

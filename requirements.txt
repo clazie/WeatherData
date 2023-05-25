@@ -1,0 +1,13 @@
+requests
+pytz
+influxdb
+paho-mqtt
+argparse
+python-dotenv
+ConfigParser
+pyserial
+dataclasses
+jsons
+pymysql
+Pillow
+psutil
