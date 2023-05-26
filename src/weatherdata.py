@@ -8,6 +8,7 @@ import paho.mqtt.client as mqtt
 import jsons
 import logging
 import logging.handlers
+import math
 
 from confighelper import ConfigHelper
 from dataclass import WeatherData
@@ -67,109 +68,156 @@ def Inch_to_mm(inch: float) -> float:
 
 
 def Mph_to_Kmh(mph: float) -> float:
-   return float(mph * 1.60934)
+  return float(mph * 1.60934)
 
 
 def InHg_to_hPa(inhg: float) -> float:
-   return float(inhg / 0.029529983071445)
+  return float(inhg / 0.029529983071445)
+
+
+def PAbs_to_PRel(pressureabs: float, temperature: float, height: float) -> float:
+  p0: float = 0.0
+  try:
+    # Berechnung des auf Meereshöhe reduzierten Luftdrucks
+    # es wird die laut Wikipedia vom Deutschen Wetterdienst empfohlene
+    # Barometrische Höhenformel verwendet
+    g0 = 9.80665                                           # Normwert der Fallbeschleunigung
+    R = 287.05                                             # Gaskonstante trockener Luft
+    T = 273.15                                             # 0°C in Kelvin
+    Ch = 0.12                                              # Beiwert zu E
+    if (temperature < 9.1):
+      E = 5.6402 * (-0.0916 + math.exp(0.06 * temperature))  # Dampfdruck des Wasserdampfanteils bei t < 9.1°C
+    else:
+      E = 18.2194 * (1.0463 - math.exp(-0.0666 * temperature))  # Dampfdruck des Wasserdampfanteils bei t >= 9.1°C
+    a = 0.0065                                          # vertikaler Temperaturgradient
+    xp = height * g0 / (R * (T + temperature + Ch * E + a * height / 2))  # Exponent für Formel
+    p0 = pressureabs * math.exp(xp)                       # Formel für den NN-bezogenen Luftdruck laut Wikipedia
+  except Exception as e:
+   log.error(e)
+
+  return p0
 
 
 def get_ecowitt_weather():
-    try:
-      retvalue: WeatherData = WeatherData()
+  try:
+    retvalue: WeatherData = WeatherData()
 
-      # Doku der API unter https://doc.ecowitt.net/web/#/
-      url = config.get_var("ecowitt.url", None)
-      if url is None:
-          raise "ecowitt url is not configured"
-      appkey = config.get_var("ecowitt.appkey", None)
-      if appkey is None:
-          raise "ecowitt url is not configured"
-      apikey = config.get_var("ecowitt.apikey", None)
-      if apikey is None:
-          raise "ecowitt url is not configured"
-      mac = config.get_var("ecowitt.mac", None)
-      if mac is None:
-          raise "ecowitt url is not configured"
+    # Doku der API unter https://doc.ecowitt.net/web/#/
+    url = config.get_var("ecowitt.url", None)
+    if url is None:
+        raise "ecowitt url is not configured"
+    appkey = config.get_var("ecowitt.appkey", None)
+    if appkey is None:
+        raise "ecowitt url is not configured"
+    apikey = config.get_var("ecowitt.apikey", None)
+    if apikey is None:
+        raise "ecowitt url is not configured"
+    mac = config.get_var("ecowitt.mac", None)
+    if mac is None:
+        raise "ecowitt url is not configured"
 
-      # Url is someting like 'https://api.ecowitt.net/api/v3/device/real_time?application_key={}&api_key={}&mac={}&call_back=all'
-      # Replace {} with configured values
-      url = url.format(appkey, apikey, mac)
-      log.info(f"EcoWitt Url: '{url}'")
+    # Url is someting like 'https://api.ecowitt.net/api/v3/device/real_time?application_key={}&api_key={}&mac={}&call_back=all'
+    # Replace {} with configured values
+    url = url.format(appkey, apikey, mac)
+    log.info(f"EcoWitt Url: '{url}'")
 
-      x = requests.get(url)
-      log.debug(x.text)
+    x = requests.get(url)
+    log.debug(x.text)
 
-      if (x.status_code == 200):
-        log.info("Status code 200: data received")
-        jsondata = x.json()
-        log.debug(jsondata)
-        if (jsondata["code"]) != 0:
-          raise Exception(f"Code from returned weatherdata is {jsondata['code']}. Msg: {jsondata['msg']}")
+    if (x.status_code == 200):
+      log.info("Status code 200: data received")
+      jsondata = x.json()
+      log.debug(jsondata)
+      if (jsondata["code"]) != 0:
+        raise Exception(f"Code from returned weatherdata is {jsondata['code']}. Msg: {jsondata['msg']}")
 
-        # Data Conversion
-        retvalue.time = datetime.datetime.utcfromtimestamp(int(jsondata["time"])).strftime('%Y-%m-%d %H:%M:%S')
-        jsonwdat = jsondata["data"]
-        log.warning(jsons.dumps(jsonwdat))
-        retvalue.outtemp = F_to_C(float(jsonwdat["outdoor"]["temperature"]["value"]))
-        retvalue.outfeelslike = F_to_C(float(jsonwdat["outdoor"]["feels_like"]["value"]))
-        retvalue.outapptemp = F_to_C(float(jsonwdat["outdoor"]["app_temp"]["value"]))
-        retvalue.outdrewpoint = F_to_C(float(jsonwdat["outdoor"]["dew_point"]["value"]))
-        retvalue.outhumidity = float(jsonwdat["outdoor"]["humidity"]["value"])
-        retvalue.intemp = F_to_C(float(jsonwdat["indoor"]["temperature"]["value"]))
-        retvalue.inhumidity = float(jsonwdat["indoor"]["humidity"]["value"])
-        retvalue.solar = float(jsonwdat["solar_and_uvi"]["solar"]["value"])
-        retvalue.uvi = float(jsonwdat["solar_and_uvi"]["uvi"]["value"])
-        retvalue.rainrate = Inch_to_mm(float(jsonwdat["rainfall"]["yearly"]["value"]))
-        retvalue.rainevent = Inch_to_mm(float(jsonwdat["rainfall"]["yearly"]["value"]))
-        retvalue.rainhourly = Inch_to_mm(float(jsonwdat["rainfall"]["yearly"]["value"]))
-        retvalue.raindaily = Inch_to_mm(float(jsonwdat["rainfall"]["yearly"]["value"]))
-        retvalue.rainweekly = Inch_to_mm(float(jsonwdat["rainfall"]["yearly"]["value"]))
-        retvalue.rainmonthly = Inch_to_mm(float(jsonwdat["rainfall"]["yearly"]["value"]))
-        retvalue.rainyearly = Inch_to_mm(float(jsonwdat["rainfall"]["yearly"]["value"]))
-        retvalue.windspeed = Mph_to_Kmh(float(jsonwdat["wind"]["wind_speed"]["value"]))
-        retvalue.windgust = Mph_to_Kmh(float(jsonwdat["wind"]["wind_gust"]["value"]))
-        retvalue.winddirection = float(jsonwdat["wind"]["wind_direction"]["value"])
-        retvalue.pressurerel = InHg_to_hPa(float(jsonwdat["pressure"]["relative"]["value"]))
-        retvalue.pressureabs = InHg_to_hPa(float(jsonwdat["pressure"]["absolute"]["value"]))
-        retvalue.waterleak = float(jsonwdat["water_leak"]["leak_ch2"]["value"])
-        retvalue.battery_t_rh_p_sensor = float(jsonwdat["battery"]["t_rh_p_sensor"]["value"])
-        retvalue.battery_sensor_array = float(jsonwdat["battery"]["sensor_array"]["value"])
+      # Data Conversion
+      retvalue.time = datetime.datetime.utcfromtimestamp(int(jsondata["time"])).strftime('%Y-%m-%d %H:%M:%S')
+      jsonwdat = jsondata["data"]
+      log.warning(jsons.dumps(jsonwdat))
+      retvalue.outtemp = F_to_C(float(jsonwdat["outdoor"]["temperature"]["value"]))
+      retvalue.outfeelslike = F_to_C(float(jsonwdat["outdoor"]["feels_like"]["value"]))
+      retvalue.outapptemp = F_to_C(float(jsonwdat["outdoor"]["app_temp"]["value"]))
+      retvalue.outdrewpoint = F_to_C(float(jsonwdat["outdoor"]["dew_point"]["value"]))
+      retvalue.outhumidity = float(jsonwdat["outdoor"]["humidity"]["value"])
+      retvalue.intemp = F_to_C(float(jsonwdat["indoor"]["temperature"]["value"]))
+      retvalue.inhumidity = float(jsonwdat["indoor"]["humidity"]["value"])
+      retvalue.solar = float(jsonwdat["solar_and_uvi"]["solar"]["value"])
+      retvalue.uvi = float(jsonwdat["solar_and_uvi"]["uvi"]["value"])
+      retvalue.rainrate = Inch_to_mm(float(jsonwdat["rainfall"]["yearly"]["value"]))
+      retvalue.rainevent = Inch_to_mm(float(jsonwdat["rainfall"]["yearly"]["value"]))
+      retvalue.rainhourly = Inch_to_mm(float(jsonwdat["rainfall"]["yearly"]["value"]))
+      retvalue.raindaily = Inch_to_mm(float(jsonwdat["rainfall"]["yearly"]["value"]))
+      retvalue.rainweekly = Inch_to_mm(float(jsonwdat["rainfall"]["yearly"]["value"]))
+      retvalue.rainmonthly = Inch_to_mm(float(jsonwdat["rainfall"]["yearly"]["value"]))
+      retvalue.rainyearly = Inch_to_mm(float(jsonwdat["rainfall"]["yearly"]["value"]))
+      retvalue.windspeed = Mph_to_Kmh(float(jsonwdat["wind"]["wind_speed"]["value"]))
+      retvalue.windgust = Mph_to_Kmh(float(jsonwdat["wind"]["wind_gust"]["value"]))
+      retvalue.winddirection = float(jsonwdat["wind"]["wind_direction"]["value"])
+      retvalue.pressurerel = InHg_to_hPa(float(jsonwdat["pressure"]["relative"]["value"]))
+      retvalue.pressureabs = InHg_to_hPa(float(jsonwdat["pressure"]["absolute"]["value"]))
+      retvalue.waterleak = float(jsonwdat["water_leak"]["leak_ch2"]["value"])
+      retvalue.battery_t_rh_p_sensor = float(jsonwdat["battery"]["t_rh_p_sensor"]["value"])
+      retvalue.battery_sensor_array = float(jsonwdat["battery"]["sensor_array"]["value"])
 
-        return retvalue
-      else:
-          log.error(f"Status code {x.status_code}: No data received")
-          return None
-    except Exception as e:
-        log.error(e)
+      return retvalue
+    else:
+        log.error(f"Status code {x.status_code}: No data received")
         return None
+  except Exception as e:
+      log.error(e)
+      return None
 
 
 def get_http_weather():
-    # IP = "http://192.168.15.252/webcam/data.json"
-    IP = "http://webcam.mfv-biebertal.de/mfv/Wetter1/json.php"
-    x = requests.get(IP)
-    # print(x.text)
+  try:
+    retvalue: WeatherData = WeatherData()
+
+    url = config.get_var("httpjson.url", None)
+    if url is None:
+        raise "httpjson url is not configured"
+
+    height = config.get_var("base.stationheight", None)
+    if height is None:
+        raise "base height is not configured"
+
+    x = requests.get(url)
+    log.debug(x.text)
+    # {"loc":"cz","dt":"2023-01-25 11:33:07","dw":"2023-01-25 11:33:07","to": "-1.11","ti": "3.39","ws": "2.9","wsa": "2.8085","wsg": "5.47","wd": "98","r": "100","r1h": "0","r24": "0","ho":  "99","hi": "73","p": "1009.48","ss": "0","cl": "0","ct": "0"}
 
     if (x.status_code == 200):
-        print("received data")
-        # kvp={}
-        # for line in x.iter_lines(decode_unicode=True):
-        #    if(line.find(':') != -1):
-        #        #print(str(line))
-        #        line = line.replace("&nbsp;","").replace("<br>","")
-        #        key = line.split(':',1)[0].replace(" ","_")
-        #        value = line.split(':',1)[1].replace(",",".")
-        #        #print("Key: "+str(key)+" Value: "+str(value) )
-        #        kvp[key] = value
-        # print(x.json())
-        return x.json()
+        log.info("received http json data")
+        jsonwdat = x.json()
+        retvalue.time = str(jsonwdat["dt"])
+        retvalue.outtemp = float(jsonwdat["to"])
+        retvalue.intemp = float(jsonwdat["ti"])
+        retvalue.windspeed = float(jsonwdat["ws"])
+        retvalue.windgust = float(jsonwdat["wsg"])
+        retvalue.winddirection = float(jsonwdat["wd"])
+        retvalue.rainyearly = float(jsonwdat["r"])
+        retvalue.rainhourly = float(jsonwdat["r1h"])
+        retvalue.raindaily = float(jsonwdat["r24"])
+        retvalue.outhumidity = float(jsonwdat["ho"])
+        retvalue.inhumidity = float(jsonwdat["hi"])
+        retvalue.pressureabs = float(jsonwdat["p"])
+        retvalue.pressurerel = PAbs_to_PRel(retvalue.pressureabs, retvalue.outtemp, height)
+
+        return retvalue
     else:
         return None
+  except Exception as e:
+    log.error(e)
+    return None
 
 
 def get_weatherunderground_weather():
-   return {}
+  try:
+    retvalue: WeatherData = WeatherData()
+
+    return retvalue
+  except Exception as e:
+    log.error(e)
+    return None
 
 
 def set_weather_influxdb(weatherdata: WeatherData):
@@ -259,6 +307,7 @@ def set_weather_mqtt(weatherdata: WeatherData):
 
 
 def set_weather_log(weatherdata: WeatherData):
+   print(jsons.dumps(weatherdata))
    log.info(jsons.dumps(weatherdata))
 
 
@@ -272,6 +321,7 @@ try:
     parsed_json_all = get_weatherunderground_weather()
   elif inputservice == "httpjson":
     parsed_json_all = get_http_weather()
+
   if parsed_json_all is None:
      raise Exception("No Data received")
 

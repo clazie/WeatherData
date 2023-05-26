@@ -37,4 +37,5 @@ weatherunderground:
   apikey: 72f2fdfb972f4457f2fdfb972f1457cf
   stationid: IBIEBF55
 httpjson:
-  url: http://webcam.mfv-biebertal.de/mfv/Wetter1/json.php
+  url: http://192.168.15.252/weatherstation/data.json
+  stationheight: 222
