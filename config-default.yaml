@@ -11,10 +11,10 @@ base:
     - log
 
 logger:
-  filename: weather2influxdb.log
+  filename: /var/log/weatherdata.log
   backupcount: 3
 influxdb:
-  host: 192.168.15.107
+  host: 192.168.150.107
   port: 8086
   user: admin
   password: adminpassword
