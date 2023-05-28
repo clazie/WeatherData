@@ -247,7 +247,7 @@ def set_weather_influxdb(weatherdata: WeatherData):
         "measurement": "Weather",
         "time": weatherdata.time,
         "fields": {
-            "OutTemp": weatherdata.outemp,
+            "OutTemp": weatherdata.outtemp,
             "InTemp": weatherdata.intemp,
             "OutHumitity": weatherdata.outhumidity,
             "InHumidity": weatherdata.inhumidity,
