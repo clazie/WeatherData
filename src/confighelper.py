@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 import yaml
 import logging
+import sys
+import getopt
 from os import environ
 from dotenv import load_dotenv
 from os.path import isfile
@@ -14,6 +16,13 @@ class ConfigHelper:
 
     def initialize(self, filename: str | None = None, envfile: str = ".env", logger=None, ):
         try:
+            opts, args = getopt.getopt(sys.argv[1:],"hc:",["configfile="])
+            for opt, arg in opts:
+                if opt == '-h':
+                    print("python weatherdata -c path/to/config.yaml")
+                    sys.exit()
+                elif opt in ("-c", "--configfile"):
+                    filename = arg
             # If filename is not given, try to get filename from environment. If that fails set it to None
             if filename is None:
                 filename = environ.get("CONFIG", None)
