@@ -156,7 +156,7 @@ def get_ecowitt_weather():
       retvalue.winddirection = float(jsonwdat["wind"]["wind_direction"]["value"])
       retvalue.pressurerel = InHg_to_hPa(float(jsonwdat["pressure"]["relative"]["value"]))
       retvalue.pressureabs = InHg_to_hPa(float(jsonwdat["pressure"]["absolute"]["value"]))
-      retvalue.waterleak = float(jsonwdat["water_leak"]["leak_ch2"]["value"])
+      # retvalue.waterleak = float(jsonwdat["water_leak"]["leak_ch2"]["value"])  //API liefert wert nicht mehr
       retvalue.battery_t_rh_p_sensor = float(jsonwdat["battery"]["t_rh_p_sensor"]["value"])
       retvalue.battery_sensor_array = float(jsonwdat["battery"]["sensor_array"]["value"])
 
