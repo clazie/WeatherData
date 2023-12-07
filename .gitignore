@@ -1,3 +1,5 @@
+*.log
+*.log.*
 env3/
 .vscode/settings.json
 fronius.log*
@@ -6,6 +8,7 @@ solarpy.log*
 fronius.cfg
 solarpy.cfg
 templates/public/webcam/
+
 
 #Here may be Copyrighted Files in it
 Info/
