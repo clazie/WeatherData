@@ -16,7 +16,7 @@ class ConfigHelper:
 
     def initialize(self, filename: str | None = None, envfile: str = ".env", logger=None, ):
         try:
-            opts, args = getopt.getopt(sys.argv[1:],"hc:",["configfile="])
+            opts, args = getopt.getopt(sys.argv[1:], "hc:", ["configfile="])
             for opt, arg in opts:
                 if opt == '-h':
                     print("python weatherdata -c path/to/config.yaml")

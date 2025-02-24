@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
 from influxdb import InfluxDBClient
+
+# InfluxDB v2
+import influxdb_client
+from influxdb_client.client.write_api import SYNCHRONOUS
+
 import requests
 import datetime
 import pytz
@@ -273,6 +278,65 @@ def set_weather_influxdb(weatherdata: WeatherData):
     log.error(e)
 
 
+def set_weather_influxdb2(weatherdata: WeatherData):
+  try:
+    ifx2stationname = config.get_var("base.stationname", None)
+    if ifx2stationname is None:
+      raise "influxdb2 stationname is not configured"
+    ifx2host = config.get_var("influxdb2.host", None)
+    if ifx2host is None:
+      raise "influxdb2 host is not configured"
+    ifx2port = config.get_var("influxdb2.port", None)
+    if ifx2port is None:
+      raise "influxdb2 port is not configured"
+    ifx2org = config.get_var("influxdb2.org", None)
+    if ifx2org is None:
+      raise "influxdb2 org is not configured"
+    ifx2apitoken = config.get_var("influxdb2.apitoken", None)
+    if ifx2apitoken is None:
+      raise "influxdb2 ApiKey is not configured"
+    ifx2bucket = config.get_var("influxdb2.bucket", None)
+    if ifx2bucket is None:
+      raise "influxdb2 bucket is not configured"
+
+    # connect database
+    client = influxdb_client.InfluxDBClient(url=f'http://{ifx2host}:{ifx2port}', token=ifx2apitoken, org=ifx2org)
+    write_api = client.write_api(write_options=SYNCHRONOUS)
+
+    # weatherdata = parsed_json_all['data']
+
+    datapoint = (
+      influxdb_client.Point("Weather")
+      .tag("stationname", ifx2stationname)
+      .field("time", weatherdata.time)  # Time from Weatherstation (not iso conform)
+      .field("measurement", "Weather")
+
+      .field("OutTemp", weatherdata.outtemp)
+      .field("InTemp", weatherdata.intemp)
+      .field("OutHumitity", weatherdata.outhumidity)
+      .field("InHumidity", weatherdata.inhumidity)
+      .field("Rain", weatherdata.rainrate)
+      .field("Rain1h", weatherdata.rainhourly)
+      .field("Rain24h", weatherdata.raindaily)
+      .field("Pressure", weatherdata.pressureabs)
+      .field("Wind", weatherdata.windspeed)
+      # .field("WindAvg", float(weatherdata["wind"]["wind_speed"]["value"]) *1.60934)
+      .field("WindGust", weatherdata.windgust)
+      # .field("CL", 0)
+      # .field("CT", 0)
+      # .field("Status", parsed_json["qcStatus"])
+      # .field("PNow", float(solar["Gesamtleistung_AC"]))
+      .field("WindDir", weatherdata.winddirection)
+    )
+
+    log.debug(f"Return client.write_points(datapoint) is {write_api.write(bucket=ifx2bucket, org=ifx2org, record=datapoint)}")
+
+    log.debug(f"Datapoint is: {datapoint}")
+    log.info("Inserted InfluxDB2 dataset")
+  except Exception as e:
+    log.error("Error: " + str(e))
+
+
 def set_weather_mqtt(weatherdata: WeatherData):
   try:
     mqtthost = config.get_var("mqtt.host")
@@ -330,6 +394,9 @@ try:
     if conf_output == "influxdb":
        log.info("Output to influx")
        set_weather_influxdb(parsed_json_all)
+    if conf_output == "influxdb2":
+       log.info("Output to influx2")
+       set_weather_influxdb2(parsed_json_all)
     if conf_output == "mqtt":
        log.info("Output to mqtt")
        set_weather_mqtt(parsed_json_all)

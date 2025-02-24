@@ -1,6 +1,7 @@
 requests
 pytz
 influxdb
+influxdb-client
 paho-mqtt
 argparse
 python-dotenv
@@ -11,3 +12,4 @@ jsons
 pymysql
 Pillow
 psutil
+PyYAML

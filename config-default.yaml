@@ -19,6 +19,14 @@ influxdb:
   user: admin
   password: adminpassword
   database: WeatherData
+
+influxdb2:
+  host: 192.168.15.238
+  port: 8086
+  org: private
+  apitoken: <API-TOKEN-FROM-INFLUX>
+  bucket: WeatherData
+
 mqtt:
   host: 192.168.150.107
   port: 1883
