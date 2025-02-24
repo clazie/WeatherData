@@ -259,6 +259,7 @@ def set_weather_influxdb(weatherdata: WeatherData):
             "Rain": weatherdata.rainrate,
             "Rain1h": weatherdata.rainhourly,
             "Rain24h": weatherdata.raindaily,
+            "Rain1y": weatherdata.rainyearly,
             "Pressure": weatherdata.pressureabs,
             "Wind": weatherdata.windspeed,
             # "WindAvg": float(weatherdata["wind"]["wind_speed"]["value"]) *1.60934,
