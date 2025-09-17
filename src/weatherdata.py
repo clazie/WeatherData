@@ -151,7 +151,8 @@ def get_ecowitt_weather():
       retvalue.uvi = float(jsonwdat["solar_and_uvi"]["uvi"]["value"])
       retvalue.rainrate = Inch_to_mm(float(jsonwdat["rainfall"]["rain_rate"]["value"]))
       retvalue.rainevent = Inch_to_mm(float(jsonwdat["rainfall"]["event"]["value"]))
-      retvalue.rainhourly = Inch_to_mm(float(jsonwdat["rainfall"]["hourly"]["value"]))
+      # retvalue.rainhourly = Inch_to_mm(float(jsonwdat["rainfall"]["hourly"]["value"])) //Api liefert jetzt "1_hour"
+      retvalue.rainhourly = Inch_to_mm(float(jsonwdat["rainfall"]["1_hour"]["value"]))
       retvalue.raindaily = Inch_to_mm(float(jsonwdat["rainfall"]["daily"]["value"]))
       retvalue.rainweekly = Inch_to_mm(float(jsonwdat["rainfall"]["weekly"]["value"]))
       retvalue.rainmonthly = Inch_to_mm(float(jsonwdat["rainfall"]["monthly"]["value"]))
